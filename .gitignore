@@ -1,0 +1,6 @@
+src/shards/
+src/vessels/
+.env
+*.env
+.env.*
+*.env.*

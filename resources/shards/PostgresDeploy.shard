@@ -1,0 +1,21 @@
+{{shard "PostgresDeploy"}}
+
+{{begin "Services"}}
+{{set "name" "database-service"}}
+{{set "runsOn" "database"}}
+{{set "port" 5432}}
+{{set "targetPort" 5432}}
+
+{{begin "Secrets"}}
+{{set "name" "database-envs"}}
+{{bind "runsOnList" "Services@runsOn[]" }}
+{{receive "data"}}
+
+{{begin "Deployments"}}
+{{bind "name" "Services@runsOn"}}
+{{receive "image"}}
+{{set "runsOn" "postgres"}}
+{{set "component" "database"}}
+{{bind "containerPort" "Services@targetPort"}}
+{{bind "envSecretRefs" "Secrets@name[]"}}
+{{seal}}

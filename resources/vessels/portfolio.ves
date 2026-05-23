@@ -1,0 +1,22 @@
+{{conf "Chart"}}
+---
+{{cast "Chart" "Chart"}}
+{{cast "WebServer" "webserver"}}
+---
+{{append .Chart.Main "dependencies[0]" (map "version" "0.1.13")}}
+{{- global "env" "prod" -}}
+
+{{override .Chart.Main "description" "App description"}}
+{{request .Chart.Main "name" "Chart name"}}
+{{$prefix := print .Chart.Main.name "-"}}
+
+{{target .Chart.Main.name}}
+		
+{{override .webserver.Deployments "image" "ghcr.io/b-zago/portfolio/webserver:latest"}}
+{{override .webserver.Deployments "runsOn" "nginx"}}
+{{override .webserver.Routes "host" "zagoapps.com"}}
+{{override .webserver.Services "targetPort" 80}}
+{{summon (print "values-" .Globals.Values.env)}}
+{{global "env" "staging"}}
+{{override .webserver.Routes "host" "staging.zagoapps.com"}}
+{{summon (print "values-" .Globals.Values.env)}}
