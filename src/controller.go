@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -167,14 +168,18 @@ func fetchCert() error {
 	cmd := exec.Command("kubeseal", "--fetch-cert",
 		"--controller-name=sealed-secrets",
 		"--controller-namespace=kube-system")
-	out, err := os.Create("/app/cert.pem")
+	out, err := cmd.Output()
 	if err != nil {
-		return err
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			return fmt.Errorf("kubeseal exit %d: %s", ee.ExitCode(), ee.Stderr)
+		}
+		return fmt.Errorf("kubeseal failed: %w", err)
 	}
-	defer out.Close()
-	cmd.Stdout = out
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	if len(out) == 0 {
+		return errors.New("kubeseal returned empty cert")
+	}
+	return os.WriteFile("/app/cert.pem", out, 0644)
 }
 
 func ParseEnvFile(data string) map[string]string {
