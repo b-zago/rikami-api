@@ -83,7 +83,7 @@ func TargetRepoSummon(req *RequestSummon, user string) []EnvEntry {
 	generateEnvs(req.Envs, workdir)
 
 	targetArg := fmt.Sprintf("-target=../../target/charts/%s", req.Name)
-	run(workdir, "rika", "summon", req.Vessel, targetArg, "-local", "-conf=../../conf")
+	run(workdir, "rikami", "summon", req.Vessel, targetArg, "-local", "-conf=../../conf")
 
 	updateVer(req.Name, req.LibVersion)
 
