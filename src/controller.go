@@ -68,8 +68,6 @@ func TargetRepoSync() {
 	run(dest, "git", "config", "user.name", "rikami")
 	run(dest, "git", "config", "user.email", "rikami@example.com")
 	run(dest, "git", "remote", "add", "origin", url)
-	run(dest, "git", "fetch", "origin", branch)
-	run(dest, "git", "branch", "--set-upstream-to=origin/"+branch, branch)
 	run(dest, "git", "pull", "origin", branch)
 }
 
@@ -101,6 +99,7 @@ func commitPush(vslName string, user string) {
 
 	run(workdir, "git", "add", "charts")
 	run(workdir, "git", "commit", "-m", commitMsg)
+	run(workdir, "git", "pull", "--rebase", "origin", "main") // absorb concurrent commits
 	run(workdir, "git", "push", "origin", "HEAD:main")
 }
 
