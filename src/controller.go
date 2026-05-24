@@ -12,12 +12,13 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-func run(dest string, args ...string) {
+func run(dest string, args ...string) error {
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Dir = dest
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	err := cmd.Run()
-	Check(err)
+	CheckPrint(err)
+	return err
 }
 
 func RepoSync() {
@@ -71,9 +72,9 @@ func TargetRepoSync() {
 	run(dest, "git", "pull", "origin", branch)
 }
 
-func TargetRepoSummon(req *RequestSummon, user string) []EnvEntry {
+func TargetRepoSummon(req *SummonRequest, user string) []EnvEntry {
 	err := fetchCert()
-	Check(err)
+	CheckPrint(err)
 	RepoSync()
 	TargetRepoSync()
 
@@ -88,14 +89,26 @@ func TargetRepoSummon(req *RequestSummon, user string) []EnvEntry {
 
 	updateVer(req.Name, req.LibVersion)
 
-	commitPush(req.Name, user)
+	commitMsg := fmt.Sprintf(`"%s created. Issued by %s"`, req.Name, user)
+	commitPush(commitMsg)
 
 	return getGeneratedSecrets(workdir)
 }
 
-func commitPush(vslName string, user string) {
+func TargetRepoApp(req *AppRequest, user string) Response {
+	dest := filepath.Join("target", "charts")
+	err := run(dest, "rika", "app", req.Action, req.Pattern, req.Param)
+	if err != nil {
+		return Response{Message: err.Error()}
+	}
+
+	commitMsg := fmt.Sprintf(`"%s was modified with action %s. Issued by %s"`, req.Pattern, req.Action, user)
+	commitPush(commitMsg)
+	return Response{Message: "App request executed"}
+}
+
+func commitPush(commitMsg string) {
 	workdir := "target"
-	commitMsg := fmt.Sprintf(`"%s created. Issued by %s"`, vslName, user)
 
 	run(workdir, "git", "add", "charts")
 	run(workdir, "git", "commit", "-m", commitMsg)
@@ -128,7 +141,7 @@ func updateVer(chartName string, version string) {
 	enc := yaml.NewEncoder(&buf, yaml.Indent(2), yaml.IndentSequence(true))
 	CheckPrint(enc.Encode(doc))
 	enc.Close()
-	Check(os.WriteFile(chartPath, buf.Bytes(), 0644))
+	CheckPrint(os.WriteFile(chartPath, buf.Bytes(), 0644))
 }
 
 func generateEnvs(envs []EnvEntry, workdir string) {
