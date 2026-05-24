@@ -111,13 +111,8 @@ func readEnvs(userID string) map[string]string {
 	}
 }
 
-func setEnvs() {
-	os.Setenv("SEALED_SECRETS_CERT", "/app/cert.pem")
-}
-
 func main() {
 	fmt.Println("Starting Rikami controller...")
-	setEnvs()
 	RepoSync()
 	TargetRepoSync()
 	http.HandleFunc("/summon", handleSummon)

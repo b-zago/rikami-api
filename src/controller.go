@@ -165,6 +165,7 @@ func getGeneratedSecrets(workdir string) []EnvEntry {
 }
 
 func fetchCert() error {
+	os.Unsetenv("SEALED_SECRETS_CERT")
 	cmd := exec.Command("kubeseal", "--fetch-cert",
 		"--controller-name=sealed-secrets",
 		"--controller-namespace=kube-system")
@@ -179,6 +180,7 @@ func fetchCert() error {
 	if len(out) == 0 {
 		return errors.New("kubeseal returned empty cert")
 	}
+	os.Setenv("SEALED_SECRETS_CERT", "/app/cert.pem")
 	return os.WriteFile("/app/cert.pem", out, 0644)
 }
 
