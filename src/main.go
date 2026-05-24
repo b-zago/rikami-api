@@ -131,8 +131,6 @@ func readEnvs(userID string) map[string]string {
 }
 
 func main() {
-	os.Setenv("USER_1f1b082099b90969", "zago")
-	os.Setenv("TOKEN_1f1b082099b90969", "acd7221d4d5b785c321cfdfe9e353e34")
 	fmt.Println("Starting Rikami controller...")
 	RepoSync()
 	TargetRepoSync()
