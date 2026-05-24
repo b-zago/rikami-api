@@ -1,6 +1,4 @@
-src/shards/
-src/vessels/
-.env
-*.env
-.env.*
-*.env.*
+*.env*
+src/target
+src/resources
+src/workdir

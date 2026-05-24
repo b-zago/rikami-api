@@ -1,0 +1,4 @@
+src/resources
+src/target
+src/workdir/*
+src/.env

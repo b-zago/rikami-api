@@ -30,6 +30,12 @@ func Check(err error) {
 	}
 }
 
+func CheckPrint(err error) {
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func verifyHMAC(body []byte, authHeader string, token string) bool {
 	parts := strings.SplitN(authHeader, " ", 2)
 	if len(parts) != 2 || parts[0] != "HMAC" {
@@ -42,7 +48,6 @@ func verifyHMAC(body []byte, authHeader string, token string) bool {
 }
 
 func handleSummon(w http.ResponseWriter, r *http.Request) {
-	RepoSync()
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -78,18 +83,25 @@ func handleSummon(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("User:       %s\n", creds["user"])
-	fmt.Printf("Vessel:     %s\n", req.Vessel)
-	fmt.Printf("LibVersion: %s\n", req.LibVersion)
-	fmt.Printf("Name:       %s\n", req.Name)
-	for _, env := range req.Envs {
-		fmt.Printf("Env: %s\n", env.EnvName)
-		for k, v := range env.EnvVals {
-			fmt.Printf("  %s=%s\n", k, v)
-		}
-	}
+	// fmt.Printf("User:       %s\n", creds["user"])
+	// fmt.Printf("Vessel:     %s\n", req.Vessel)
+	// fmt.Printf("LibVersion: %s\n", req.LibVersion)
+	// fmt.Printf("Name:       %s\n", req.Name)
+	// for _, env := range req.Envs {
+	// 	fmt.Printf("Env: %s\n", env.EnvName)
+	// 	for k, v := range env.EnvVals {
+	// 		fmt.Printf("  %s=%s\n", k, v)
+	// 	}
+	// }
 
+	data, err := json.Marshal(TargetRepoSummon(&req, creds["user"]))
+	if err != nil {
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 func readEnvs(userID string) map[string]string {
@@ -99,22 +111,15 @@ func readEnvs(userID string) map[string]string {
 	}
 }
 
-// dirty for dev, will remove later and pass envs normally. example ids and tokens, dont do anything real
 func setEnvs() {
-	os.Setenv("USER_17e0c09031e3edfeca050f71465c3868", "zago")
-	os.Setenv("TOKEN_17e0c09031e3edfeca050f71465c3868", "51db62a6d50fac87e700d0fd5b789665b2ac3aa6d23f27c0de04f59d16e4f838")
-
-	f, err := os.ReadFile(".env")
-	Check(err)
-	fStr := strings.TrimSpace(string(f))
-	k, v, _ := strings.Cut(fStr, "=")
-	os.Setenv(k, v)
+	os.Setenv("SEALED_SECRETS_CERT", "cert.pem")
 }
 
 func main() {
 	fmt.Println("Starting Rikami controller...")
 	setEnvs()
 	RepoSync()
+	TargetRepoSync()
 	http.HandleFunc("/summon", handleSummon)
 	fmt.Println("listening on :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
