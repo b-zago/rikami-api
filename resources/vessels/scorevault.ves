@@ -17,7 +17,7 @@
 {{override .web.Deployments "image" "ghcr.io/b-zago/scorevault/webserver:latest"}}
 {{override .web.Deployments "runsOn" "python"}}
 {{override .web.Deployments "envVars" (envGen "DB_HOST" (print $prefix .db.Services.name) "REDIS" (print $prefix .redis.Services.name))}}
-{{override .web.Routes "host" "scorevault.zagoapps.com"}}
+{{override .web.Routes "host" (print .Chart.Main.name ".zagoapps.com")}}
 {{override .web.Services "targetPort" 8000}}
 {{override .db.Deployments "image" "postgres:18-alpine"}}
 {{override .db.Secrets "data" (secRand (print $prefix .db.Secrets.name) "POSTGRES_DB" "POSTGRES_PASSWORD" "POSTGRES_USER")}}
@@ -25,6 +25,6 @@
 {{append .db.Secrets "runsOnList" (list .web.Deployments.name)}}
 {{summon (print "values-" .Globals.Values.env)}}
 {{global "env" "staging"}}
-{{override .web.Routes "host" "scorevault-staging.zagoapps.com"}}
+{{override .web.Routes "host" (print .Chart.Main.name "-staging.zagoapps.com")}}
 {{override .db.Secrets "data" (secRand (print $prefix .db.Secrets.name) "POSTGRES_DB" "POSTGRES_PASSWORD" "POSTGRES_USER")}}
 {{summon (print "values-" .Globals.Values.env)}}
