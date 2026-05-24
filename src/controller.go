@@ -97,7 +97,7 @@ func TargetRepoSummon(req *SummonRequest, user string) []EnvEntry {
 
 func TargetRepoApp(req *AppRequest, user string) Response {
 	dest := filepath.Join("target", "charts")
-	err := run(dest, "rika", "app", req.Action, req.Pattern, req.Param, "-local")
+	err := run(dest, "rika", "app", req.Action, req.Pattern, "-p="+req.Param, "-local")
 	if err != nil {
 		return Response{Message: err.Error()}
 	}

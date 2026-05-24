@@ -13,7 +13,7 @@ FROM debian:bookworm-slim
 
 ARG TARGETARCH
 ARG KUBESEAL_VER=v0.36.6
-ARG RIKA_VER=v0.1.1
+ARG RIKA_VER=v0.1.2
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl git ca-certificates \
   && rm -rf /var/lib/apt/lists/*
