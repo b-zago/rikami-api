@@ -167,7 +167,7 @@ func fetchCert() error {
 	cmd := exec.Command("kubeseal", "--fetch-cert",
 		"--controller-name=sealed-secrets",
 		"--controller-namespace=kube-system")
-	out, err := os.Create("cert.pem")
+	out, err := os.Create("/app/cert.pem")
 	if err != nil {
 		return err
 	}

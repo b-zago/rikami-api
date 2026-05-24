@@ -17,7 +17,9 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-COPY src/conf /usr/local/bin/conf 
+WORKDIR /app
+COPY src/conf /app/conf
+
 COPY --from=builder /out/server /usr/local/bin/server
 COPY --from=builder /out/rikami /usr/local/bin/rikami
 COPY --from=builder /out/kubeseal /usr/local/bin/kubeseal
