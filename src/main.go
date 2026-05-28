@@ -156,6 +156,10 @@ func handleGetCert(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, GetFreshCert())
 }
 
+func handleHealth(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, &Response{Message: "Ok!"})
+}
+
 func readEnvs(userID string) map[string]string {
 	return map[string]string{
 		"user":  os.Getenv("USER_" + userID),
@@ -168,9 +172,10 @@ func main() {
 	loadEnvConf()
 	RepoSync()
 	TargetRepoSync()
-	http.HandleFunc("/summon", withAuth(handleSummon))
-	http.HandleFunc("/app", withAuth(handleApp))
-	http.HandleFunc("/fetch-cert", handleGetCert)
+	http.HandleFunc("POST /summon", withAuth(handleSummon))
+	http.HandleFunc("POST /app", withAuth(handleApp))
+	http.HandleFunc("GET /fetch-cert", handleGetCert)
+	http.HandleFunc("GET /health", handleHealth)
 	fmt.Println("listening on :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Println("server error:", err)
