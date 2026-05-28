@@ -33,5 +33,7 @@ COPY src/conf .
 
 COPY --from=builder /out/server /usr/local/bin/server
 
+ENV TARGET_BRANCH "dev"
+
 EXPOSE 8080
 CMD ["server"]

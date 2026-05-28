@@ -17,7 +17,7 @@ func run(dest string, args ...string) error {
 	cmd.Dir = dest
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	err := cmd.Run()
-	CheckPrint(err)
+	CheckPrint(err, false)
 	return err
 }
 
@@ -54,7 +54,7 @@ func RepoSync() {
 func TargetRepoSync() {
 	owner := "b-zago"
 	repo := "k3s-cluster"
-	branch := "main"
+	branch := EnvConf.TargetBranch
 	dest := "./target"
 	token := os.Getenv("GITHUB_TOKEN")
 
@@ -74,7 +74,7 @@ func TargetRepoSync() {
 
 func TargetRepoSummon(req *SummonRequest, user string) []EnvEntry {
 	err := fetchCert()
-	CheckPrint(err)
+	CheckPrint(err, false)
 	RepoSync()
 	TargetRepoSync()
 
@@ -107,6 +107,15 @@ func TargetRepoApp(req *AppRequest, user string) Response {
 	return Response{Message: "App request executed"}
 }
 
+func GetFreshCert() Response {
+	fetchCert()
+
+	f, err := os.ReadFile("/app/cert.pem")
+	CheckPrint(err, false)
+
+	return Response{Message: string(f)}
+}
+
 func commitPush(commitMsg string) {
 	workdir := "target"
 
@@ -120,14 +129,14 @@ func overrideName(vsl string, vslName string) {
 	vesPath := filepath.Join("resources", "resources", "vessels", vsl+".ves")
 	overrideStr := fmt.Sprintf(`{{override .Chart.Main "name" "%s"}}`, vslName)
 	err := replaceInFile(vesPath, `{{request .Chart.Main "name" "Chart name"}}`, overrideStr)
-	CheckPrint(err)
+	CheckPrint(err, false)
 }
 
 func updateVer(chartName string, version string) {
 	chartPath := filepath.Join("target", "charts", chartName, "Chart.yaml")
 
 	data, err := os.ReadFile(chartPath)
-	CheckPrint(err)
+	CheckPrint(err, false)
 
 	var doc map[string]any
 	if err := yaml.Unmarshal(data, &doc); err != nil {
@@ -139,9 +148,9 @@ func updateVer(chartName string, version string) {
 
 	var buf bytes.Buffer
 	enc := yaml.NewEncoder(&buf, yaml.Indent(2), yaml.IndentSequence(true))
-	CheckPrint(enc.Encode(doc))
+	CheckPrint(enc.Encode(doc), false)
 	enc.Close()
-	CheckPrint(os.WriteFile(chartPath, buf.Bytes(), 0644))
+	CheckPrint(os.WriteFile(chartPath, buf.Bytes(), 0644), false)
 }
 
 func generateEnvs(envs []EnvEntry, workdir string) {
@@ -150,7 +159,7 @@ func generateEnvs(envs []EnvEntry, workdir string) {
 	for _, entry := range envs {
 		envFile := filepath.Join(workdir, entry.EnvName)
 		f, err := os.Create(envFile)
-		CheckPrint(err)
+		CheckPrint(err, false)
 		defer f.Close()
 		for k, v := range entry.EnvVals {
 			envLine := fmt.Sprintf("%s=%s\n", k, v)
@@ -168,7 +177,7 @@ func getGeneratedSecrets(workdir string) []EnvEntry {
 	for _, p := range files {
 		envPath := filepath.Join(p)
 		f, err := os.ReadFile(envPath)
-		CheckPrint(err)
+		CheckPrint(err, false)
 		newEntry := EnvEntry{
 			EnvName: filepath.Base(envPath),
 			EnvVals: ParseEnvFile(string(f)),
