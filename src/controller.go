@@ -121,8 +121,8 @@ func commitPush(commitMsg string) {
 
 	run(workdir, "git", "add", "charts")
 	run(workdir, "git", "commit", "-m", commitMsg)
-	run(workdir, "git", "pull", "--rebase", "origin", "main") // absorb concurrent commits
-	run(workdir, "git", "push", "origin", "HEAD:main")
+	run(workdir, "git", "pull", "--rebase", "origin", EnvConf.TargetBranch) // absorb concurrent commits
+	run(workdir, "git", "push", "origin", "HEAD:"+EnvConf.TargetBranch)
 }
 
 func overrideName(vsl string, vslName string) {
