@@ -169,7 +169,7 @@ func readEnvs(userID string) map[string]string {
 
 func main() {
 	fmt.Println("Starting Rikami controller...")
-	loadEnvConf()
+	EnvConf = loadEnvConf()
 	RepoSync()
 	TargetRepoSync()
 	http.HandleFunc("POST /summon", withAuth(handleSummon))
