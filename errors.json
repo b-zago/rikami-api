@@ -1,0 +1,8 @@
+{
+  "unexpected": { "message": "unexpected error occured" },
+  "forbidden": { "message": "access denied" },
+  "insufficientPerms": { "message": "insufficient permissions" },
+  "timedout": { "message": "request timed out" },
+  "failedAuth": { "message": "could not authenticate" },
+  "badRequest": { "message": "invalid request" }
+}

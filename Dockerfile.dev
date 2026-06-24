@@ -1,0 +1,8 @@
+FROM golang:1.26.4-alpine3.24
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/root/.cache/go-build \
+  --mount=type=cache,target=/go/pkg/mod \
+  go mod download
+COPY . .
+CMD [ "go", "run", "." ]

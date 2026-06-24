@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_PASSWORD: pgpass
+      POSTGRES_USER: pguser
+      POSTGRES_DB: db
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pguser -d db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:8-alpine
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8080:8080
+    environment:
+      REDIS_HOST: redis
+      POSTGRES_HOST: db
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: adminpass
+      ADMIN_HMAC: 1BRHgIcjMEIZcY133FES2Flp1djmLnyKl7P7VeRyLRU=
+      POSTGRES_PASSWORD: pgpass
+      POSTGRES_USER: pguser
+      POSTGRES_DB: db
+    depends_on:
+      db:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          target: /app
