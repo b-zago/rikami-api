@@ -1,4 +1,8 @@
-src/resources
-src/target
-src/workdir/*
-src/.env
+migrations/
+.git/
+.github/
+.gitignore
+Dockerfile*
+atlas.hcl
+.env*
+docker-dompose.yml
