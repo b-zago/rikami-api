@@ -1,0 +1,25 @@
+confs:
+  Chart@v0.0.1:
+    rikamiVersion: 0.2.9
+    appName: rikami-api
+
+envs:
+  - prod:
+      WebServer@v0.0.1:
+        image: ghcr.io/b-zago/rikami-api/webserver:latest
+        runsOn: golang
+        port: 8080
+        Secret@v0.0.1:
+          data: "(( secFile `.env.web.server.envs.secret` | nindent 6 ))"
+        deployment:
+          envSecretRefs:
+            - "(( .App ))-(( .Shards.WebServer.secret.name ))" 
+      Database@v0.0.1:
+        url: "(( secValue `.env.database.credentials.secret` `url` ))"
+        schema: "(( fromFile `./migrations/001_init.sql` | toYAML | hindent 6 ))"
+      Redis@v0.0.1:
+        noop: ""
+  - staging:
+      WebServer@v0.0.1:
+        route:
+          host: "(( .App ))-staging.(( .Domain ))"
