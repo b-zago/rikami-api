@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"time"
 
 	"github.com/b-zago/rikami-api/auth"
@@ -34,7 +35,15 @@ type User struct {
 }
 
 func (app *App) NewDbPool(ctx context.Context) {
-	dbURL := fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=disable", app.Envs.POSTGRES_USER, app.Envs.POSTGRES_PASSWORD, app.Envs.POSTGRES_HOST, app.Envs.POSTGRES_DB)
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(app.Envs.POSTGRES_USER, app.Envs.POSTGRES_PASSWORD),
+		Host:     fmt.Sprintf("%s:5432", app.Envs.POSTGRES_HOST),
+		Path:     app.Envs.POSTGRES_DB,
+		RawQuery: "sslmode=disable",
+	}
+	dbURL := u.String()
+	// dbURL := fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=disable", app.Envs.POSTGRES_USER, app.Envs.POSTGRES_PASSWORD, app.Envs.POSTGRES_HOST, app.Envs.POSTGRES_DB)
 	config, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
 		log.Fatal("could not parse db url")
