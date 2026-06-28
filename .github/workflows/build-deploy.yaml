@@ -3,8 +3,6 @@ name: Build and Deploy
 on:
   push:
     branches: [main, staging]
-    paths:
-      - "src/*"
 
 jobs:
   deploy:
