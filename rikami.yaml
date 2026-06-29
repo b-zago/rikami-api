@@ -1,6 +1,6 @@
 confs:
   Chart@v0.0.1:
-    rikamiVersion: 0.2.9
+    rikamiVersion: 0.2.10
     appName: rikami-api
 
 envs:
@@ -13,10 +13,11 @@ envs:
           data: "(( secFile `.env.web.server.envs.secret` | nindent 6 ))"
         deployment:
           envSecretRefs:
-            - "(( .App ))-(( .Shards.WebServer.secret.name ))" 
+            - "(( .Shards.WebServer.secret.name ))" 
       Database@v0.0.1:
         url: "(( secValue `.env.database.credentials.secret` `url` ))"
-        schema: "(( fromFile `./migrations/001_init.sql` | toYAML | hindent 6 ))"
+        schema: "(( fromFile `./sql/schema.sql` | toYAML | hindent 6 ))"
+        seed: "(( fromFile `./sql/seed.sql` | toYAML | hindent 6 ))"
       Redis@v0.0.1:
         noop: ""
   - staging:
