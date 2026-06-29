@@ -1,9 +1,12 @@
-FROM golang:1.26.4-alpine3.24 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.4-alpine3.24 AS builder
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
 WORKDIR /out
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o server .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o server .
 
 FROM debian:bookworm-slim
 

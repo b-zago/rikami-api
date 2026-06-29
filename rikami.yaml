@@ -6,7 +6,7 @@ confs:
 envs:
   - prod:
       WebServer@v0.0.1:
-        image: ghcr.io/b-zago/rikami-api/webserver:latest
+        image: ghcr.io/b-zago/rikami-api/webserver:af4e2b1
         runsOn: golang
         port: 8080
         Secret@v0.0.1:

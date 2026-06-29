@@ -53,37 +53,20 @@ var (
 	InfoLog = log.New(os.Stdout, "INFO: ", log.LstdFlags)
 )
 
-func (app *App) handleCert(w http.ResponseWriter, req *http.Request) {
-	resp := Response{Message: `-----BEGIN CERTIFICATE-----
-MIIEzTCCArWgAwIBAgIRAJtNkKTJqNerMjPhnFYrdscwDQYJKoZIhvcNAQELBQAw
-ADAeFw0yNjA2MTcxMzE3NDRaFw0zNjA2MTQxMzE3NDRaMAAwggIiMA0GCSqGSIb3
-DQEBAQUAA4ICDwAwggIKAoICAQDVhh9v9sINyAunTnyynoXEe/ZPSps0BR7itg1I
-H0cqGTbhB5stnjalnd8iPB45mdna1oNDzsqukcGp1JzuUFs91S9lk22QW5abwlJu
-UjzaKqjUO680KT5FfTL1x0hXd3bNgfvI12GaccjZxxRSbhVAwJzmBXumX0bJ/fhK
-X9Lt09UjRraYIg6OfeEawBuOZWnv6f39GOrLP4LFje/y1FPmNo/93jfl1nkA6X9L
-RGIeGTS2HCr3IXgvBeU4hF5OB8RV4/2PwsmrjjhoSbb9vrFUZ4bmg1VxUkZqn1Vk
-+muRkUOs0cagUHS8ainiVawN0Y9DzG5cZ24CroTL4AEx8uYSNKT514Lqn4+crCmy
-SeUlMgQS1dxQfhztLXrfidFyXPX7anl9JzFyanhvwY03VhVBLVZPkgJjTKF3xI1m
-PLDcE6W9Euj0WV5k3g3oJOYjlHwFtetQeYlFpTj+czlWz7xp8MGrH5NKgOWIX1w5
-xmWhBGFzh80ujpubhLB+FQHBPpCjrfIP93cwJpAFTiqdxtkSWOqJZOeOC5fMh7BZ
-+xU6vLlAZoWFh7vCMP0YjHyGvYjhJr6A3FDU7RDSTYcAC+to5d+5JcvMG8PC1Ifh
-x/I/ubh210wlDI5uGbVLq5/DCg149LSfyDSHsIalYbHk4nZU4JhfWlMZZ03PJGEk
-r+y7fQIDAQABo0IwQDAOBgNVHQ8BAf8EBAMCAAEwDwYDVR0TAQH/BAUwAwEB/zAd
-BgNVHQ4EFgQUlulJnOcazaWdgtnS9hvYWXPadIgwDQYJKoZIhvcNAQELBQADggIB
-ADUgH4VQI3pi5BZ2EWbCGgvkVk8UXMhPV4c0d0lcyCOdQqV7JgR5CDc1jxxVFYDm
-/6uNzJGGb795gFT3YYhEBUQtk3pWyw+oAatLrSx8B/1As9janD+cTIEC0HTZ1HUw
-np5fwTQY8SQ/Z3IaAhpwY8AEiDmLgRWKChIaNsbDPP3yFwQXXDdY1s20BuZdfZz0
-Z7ezu+bdRkeFlXYAqD4yiX8puumpAu+Tjie7fxQq08a6/KFbWzo2z7qy9crx5aEA
-munk/5LsL1NZkK08HgI/aM5A1+WuVy1QZx8B3vc6sIT32kXiBINcFwBl0GOMcK0X
-hp/ykhf7Nof60zlxE/QTbc/XCr8ht4qOJLIGUDMhruPf7d3FYysqsq1LDyvfwdg7
-xGhEDnRoimztZIXSLSRaiLdUUSKOUIXm96gg6YJRb8O8+hESnXqx3Lqa2ehMXFQv
-RXvvKqw4fbOikDwXOYEVqzwfR4ZLzxbJEgrmWVmibyZXcGCeqr0IZkzxAdfaJA3V
-nQt4Q6DSYKMHl+cRM7JHZbdLRqRci6u8GmNugP17Y+/2Fu1p02q3ycBqEJgwJ30n
-V4OSzzVVNFiZsghtEBWvKeH522r1vAjsGU15ibYAjJNrmbyxev0QshozpOGF7dTq
-t+z/gFRjhfosY9l6IFXc4uI0c4vF/lJ//vxcw1bdjvb4
------END CERTIFICATE-----`}
+func (app *App) handleCert(w http.ResponseWriter, req *http.Request) *ServerError {
+	cert, err := fetchCert(req.Context(), app.Envs.IN_CLUSTER_CERT_URL)
+	if err != nil {
+		return NewServerError("failed to fetch cert", http.StatusInternalServerError, err)
+	}
+	defer cert.Close()
+	readCert, err := io.ReadAll(cert)
+	if err != nil {
+		return NewServerError("failed to fetch cert", http.StatusInternalServerError, err)
+	}
 
+	resp := Response{Message: string(readCert)}
 	resp.WriteResponse(req, w, app)
+	return nil
 }
 
 func (app *App) handleLogin(w http.ResponseWriter, req *http.Request) *ServerError {
@@ -175,7 +158,7 @@ func main() {
 	handler := http.TimeoutHandler(mainMux, 5*time.Second, string(app.DefaultErrors.Timedout))
 	// main
 
-	mainMux.HandleFunc("GET /cert", Logger(WithTimeout(5, app.handleCert)))
+	mainMux.HandleFunc("GET /cert", Logger(WithTimeout(5, HandleErrors(&app, app.handleCert))))
 	mainMux.HandleFunc("POST /login", Logger(WithTimeout(10, HandleErrors(&app, app.handleLogin))))
 
 	http.ListenAndServe(":8080", handler)
