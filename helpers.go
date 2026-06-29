@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -18,7 +20,8 @@ type Envs struct {
 	ADMIN_HMAC,
 	POSTGRES_PASSWORD,
 	POSTGRES_USER,
-	POSTGRES_DB string
+	POSTGRES_DB,
+	IN_CLUSTER_CERT_URL string
 }
 
 type ReqUserRegister struct {
@@ -95,4 +98,20 @@ func (resp *Response) WriteResponse(req *http.Request, w http.ResponseWriter, ap
 func (app *App) WriteNewResponse(msg string, w http.ResponseWriter, req *http.Request) {
 	resp := Response{Message: msg}
 	resp.WriteResponse(req, w, app)
+}
+
+func fetchCert(ctx context.Context, url string) (io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("cannot fetch certificate: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
+	}
+	return resp.Body, nil
 }
